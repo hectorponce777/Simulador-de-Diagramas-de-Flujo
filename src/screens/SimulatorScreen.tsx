@@ -7,6 +7,8 @@ import { SymbolSvg } from '../components/SymbolGraphics';
 import { Button } from '../components/Button';
 import { cn } from '../lib/utils';
 import { MousePointer2, MoveRight, Trash2, Copy, Download, Save, Route } from 'lucide-react';
+import { toPng, toCanvas } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 
 interface Node {
   id: string;
@@ -166,8 +168,7 @@ export const SimulatorScreen = ({ state, onNavigate }: { state: AppState, onNavi
     try {
       // Small timeout to ensure no lingering drag visual state
       await new Promise(resolve => setTimeout(resolve, 50));
-      const canvas = await import('html2canvas').then(m => m.default(containerRef.current!, { backgroundColor: '#ffffff', scale: 2 }));
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = await toPng(containerRef.current, { backgroundColor: '#ffffff', pixelRatio: 2 });
       const link = document.createElement('a');
       link.download = 'diagrama.png';
       link.href = imgData;
@@ -182,9 +183,8 @@ export const SimulatorScreen = ({ state, onNavigate }: { state: AppState, onNavi
     if (!containerRef.current) return;
     try {
       await new Promise(resolve => setTimeout(resolve, 50));
-      const canvas = await import('html2canvas').then(m => m.default(containerRef.current!, { backgroundColor: '#ffffff', scale: 2 }));
+      const canvas = await toCanvas(containerRef.current, { backgroundColor: '#ffffff', pixelRatio: 2 });
       const imgData = canvas.toDataURL('image/png');
-      const jsPDF = (await import('jspdf')).default;
       const pdf = new jsPDF({
         orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
         unit: 'px',
@@ -233,8 +233,7 @@ export const SimulatorScreen = ({ state, onNavigate }: { state: AppState, onNavi
 
       {/* Center Base - Canvas */}
       <section className="md:col-span-6 md:row-span-6 bg-white rounded-2xl border border-slate-200 shadow-lg relative flex flex-col min-h-[450px] md:min-h-0 overflow-hidden flex-1">
-          <div className="flex flex-wrap items-center justify-between p-2 md:p-4 bg-slate-50 border-b border-slate-200 shrink-0 gap-2">
-             <div className="flex gap-1 md:gap-2">
+          <div className="flex flex-wrap items-center justify-between p-2 md:p-4 bg-slate-50 border-b border-slate-200 shrink-0 gap-2">             <div className="flex gap-1 md:gap-2">
                 <button 
                   className={cn("p-2 rounded-lg transition-colors flex items-center justify-center", !isConnecting ? "bg-slate-200 text-slate-800" : "hover:bg-slate-200 text-slate-600")}
                   onClick={() => setIsConnecting(false)}
